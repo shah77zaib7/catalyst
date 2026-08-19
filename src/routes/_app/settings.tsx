@@ -7,14 +7,18 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { getIntegrations } from "@/lib/integrations/registry";
 import { ASSETS } from "@/types/catalyst";
 import { loadMarketIntegration, loadMarketQuotes } from "@/lib/market/load-quotes";
+import { loadCatalystEvents } from "@/lib/news/load-news";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { signOut } from "@/lib/auth/client";
 import { useTheme } from "@/lib/theme";
 
 export const Route = createFileRoute("/_app/settings")({
   loader: async () => {
-    const quotes = await loadMarketQuotes({ data: { assets: [...ASSETS] } });
-    const market = await loadMarketIntegration();
+    const [quotes, market, news] = await Promise.all([
+      loadMarketQuotes({ data: { assets: [...ASSETS] } }),
+      loadMarketIntegration(),
+      loadCatalystEvents({ data: { limit: 1 } }),
+    ]);
     const latest = quotes
       .map((quote) => quote.timestamp)
       .filter((value): value is string => Boolean(value))
@@ -22,9 +26,19 @@ export const Route = createFileRoute("/_app/settings")({
       .at(-1);
     return {
       integrations: getIntegrations({
-        sourceStatus: market.sourceStatus,
-        detail: market.detail,
-        lastUpdated: latest ?? null,
+        market: {
+          sourceStatus: market.sourceStatus,
+          detail: market.detail,
+          lastUpdated: latest ?? null,
+        },
+        news: {
+          sourceStatus: news.status,
+          detail:
+            news.status === "unavailable"
+              ? "No news provider returned a usable item."
+              : `${news.events.length} normalized item(s) from connected news providers.`,
+          lastUpdated: news.events[0]?.fetchedAt ?? null,
+        },
       }),
     };
   },
@@ -107,9 +121,9 @@ function SettingsPage() {
             Raw data → deterministic processing → AI interpretation → user
           </p>
           <p>
-            Market quotes come from Twelve Data through a server-side adapter. News, calendar,
-            notifications, and AI are not connected. Unavailable integrations are labeled
-            UNAVAILABLE. Cached quotes are never labeled LIVE.
+            Market quotes come from Twelve Data. News is ingested from GDELT, CoinGecko, FRED, and
+            optional Alpha Vantage. Calendar, notifications, and AI are not connected. Cached items
+            are never labeled LIVE.
           </p>
         </CardContent>
       </Card>

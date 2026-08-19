@@ -5,15 +5,22 @@ import { MarketAssetCard } from "@/components/market/market-watch";
 import { PageHeader } from "@/components/page-header";
 import { GOLD_WATCHLIST } from "@/lib/market/instruments";
 import { loadMarketQuotes } from "@/lib/market/load-quotes";
+import { loadCatalystEvents } from "@/lib/news/load-news";
 import { unavailableQuote } from "@/lib/market/quotes";
 
 export const Route = createFileRoute("/_app/gold")({
-  loader: () => loadMarketQuotes({ data: { assets: [...GOLD_WATCHLIST] } }),
+  loader: async () => {
+    const [quotes, news] = await Promise.all([
+      loadMarketQuotes({ data: { assets: [...GOLD_WATCHLIST] } }),
+      loadCatalystEvents({ data: { assets: ["gold"], limit: 8 } }),
+    ]);
+    return { quotes, news };
+  },
   component: GoldPage,
 });
 
 function GoldPage() {
-  const quotes = Route.useLoaderData();
+  const { quotes, news } = Route.useLoaderData();
   const quote = quotes[0] ?? unavailableQuote("gold");
 
   return (
@@ -25,7 +32,7 @@ function GoldPage() {
       />
       <MarketAssetCard quote={quote} />
       <div className="grid gap-4 overflow-visible lg:grid-cols-2">
-        <CatalystFeed />
+        <CatalystFeed events={news.events} status={news.status} />
         <UpcomingEvents />
       </div>
     </div>

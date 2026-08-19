@@ -5,14 +5,21 @@ import { MarketWatch } from "@/components/market/market-watch";
 import { SourceStatusBadge } from "@/components/source-status/source-status-badge";
 import { DASHBOARD_WATCHLIST } from "@/lib/market/instruments";
 import { loadMarketQuotes } from "@/lib/market/load-quotes";
+import { loadCatalystEvents } from "@/lib/news/load-news";
 
 export const Route = createFileRoute("/_app/dashboard")({
-  loader: () => loadMarketQuotes({ data: { assets: [...DASHBOARD_WATCHLIST] } }),
+  loader: async () => {
+    const [quotes, news] = await Promise.all([
+      loadMarketQuotes({ data: { assets: [...DASHBOARD_WATCHLIST] } }),
+      loadCatalystEvents({ data: { limit: 5 } }),
+    ]);
+    return { quotes, news };
+  },
   component: DashboardPage,
 });
 
 function DashboardPage() {
-  const quotes = Route.useLoaderData();
+  const { quotes, news } = Route.useLoaderData();
   const marketStatus = quotes.some((quote) => quote.sourceStatus === "live")
     ? "live"
     : quotes.some((quote) => quote.sourceStatus === "cached")
@@ -43,7 +50,7 @@ function DashboardPage() {
       </div>
 
       <div className="enter-fade enter-fade-delay-3 grid gap-5 overflow-visible lg:grid-cols-2">
-        <CatalystFeed />
+        <CatalystFeed events={news.events} status={news.status} />
         <UpcomingEvents />
       </div>
     </div>

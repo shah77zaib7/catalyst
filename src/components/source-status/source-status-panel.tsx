@@ -33,8 +33,8 @@ export function SourceStatusPanel({
       </CardHeader>
       <CardContent>
         <div>
-          {rows.map((item) => (
-            <IntegrationRow key={item.id} item={item} />
+          {rows.map((item, index) => (
+            <IntegrationRow key={`${item.id}-${item.label}-${index}`} item={item} />
           ))}
         </div>
         <p className="mt-4 text-xs leading-relaxed text-subtle">

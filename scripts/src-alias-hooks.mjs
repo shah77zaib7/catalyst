@@ -10,7 +10,8 @@ export async function resolve(specifier, context, nextResolve) {
     }
   }
 
-  if (specifier.startsWith(".") && !TS_EXT.test(specifier)) {
+  const parent = context.parentURL ?? "";
+  if (parent.includes("/src/") && specifier.startsWith(".") && !TS_EXT.test(specifier)) {
     try {
       return await nextResolve(`${specifier}.ts`, context);
     } catch {

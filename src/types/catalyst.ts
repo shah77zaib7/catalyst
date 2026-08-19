@@ -11,6 +11,18 @@
 export const ASSETS = ["gold", "bitcoin", "ethereum", "solana"] as const;
 export type Asset = (typeof ASSETS)[number];
 
+export const NEWS_ASSETS = ["gold", "btc", "eth", "sol", "usd"] as const;
+export type NewsAsset = (typeof NEWS_ASSETS)[number];
+
+export const CATALYST_CATEGORIES = [
+  "macro",
+  "gold",
+  "crypto",
+  "geopolitical",
+  "central-banks",
+] as const;
+export type CatalystCategory = (typeof CATALYST_CATEGORIES)[number];
+
 export const IMPACT_LEVELS = ["low", "medium", "high", "critical"] as const;
 export type ImpactLevel = (typeof IMPACT_LEVELS)[number];
 
@@ -19,18 +31,22 @@ export type SourceStatus = (typeof SOURCE_STATUSES)[number];
 
 /**
  * A market-moving item from a connected news or event source.
- * Reserved for future phases — Phase 1 does not emit CatalystEvent objects.
+ * Impact is null unless a provider supplies it — never estimated.
  */
 export type CatalystEvent = {
   id: string;
-  timestamp: string;
   title: string;
   summary: string;
   source: string;
   sourceUrl: string;
-  impact: ImpactLevel;
-  affectedAssets: Asset[];
+  sourceUrls: string[];
+  publishedAt: string | null;
+  fetchedAt: string;
+  assets: NewsAsset[];
+  categories: CatalystCategory[];
+  impact: ImpactLevel | null;
   sourceStatus: SourceStatus;
+  providers: string[];
 };
 
 export type MarketQuote = {
@@ -80,4 +96,12 @@ export const ASSET_SYMBOLS: Record<Asset, string> = {
   bitcoin: "BTC/USD",
   ethereum: "ETH/USD",
   solana: "SOL/USD",
+};
+
+export const NEWS_ASSET_LABELS: Record<NewsAsset, string> = {
+  gold: "Gold",
+  btc: "BTC",
+  eth: "ETH",
+  sol: "SOL",
+  usd: "USD",
 };

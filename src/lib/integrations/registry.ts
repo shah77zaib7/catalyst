@@ -2,7 +2,7 @@ import type { SourceStatus } from "@/types/catalyst";
 
 /**
  * Every external integration must expose a source status.
- * Market data is wired to Twelve Data (server-side). Other phases remain unavailable.
+ * Market data: Twelve Data. News: GDELT / CoinGecko / FRED / Alpha Vantage.
  */
 export type IntegrationId =
   | "market-data"
@@ -31,7 +31,7 @@ const BASE_INTEGRATIONS: readonly IntegrationSnapshot[] = [
     id: "news",
     label: "News",
     sourceStatus: "unavailable",
-    detail: "No news source is connected.",
+    detail: "No news source has returned usable items yet.",
     lastUpdated: null,
   },
   {
@@ -59,12 +59,17 @@ const BASE_INTEGRATIONS: readonly IntegrationSnapshot[] = [
 
 export const INTEGRATIONS: readonly IntegrationSnapshot[] = BASE_INTEGRATIONS;
 
-export function getIntegrations(
-  market?: Partial<Pick<IntegrationSnapshot, "sourceStatus" | "detail" | "lastUpdated">>,
-): IntegrationSnapshot[] {
-  return BASE_INTEGRATIONS.map((item) =>
-    item.id === "market-data" && market ? { ...item, ...market } : item,
-  );
+export type IntegrationOverrides = {
+  market?: Partial<Pick<IntegrationSnapshot, "sourceStatus" | "detail" | "lastUpdated">>;
+  news?: Partial<Pick<IntegrationSnapshot, "sourceStatus" | "detail" | "lastUpdated">>;
+};
+
+export function getIntegrations(overrides: IntegrationOverrides = {}): IntegrationSnapshot[] {
+  return BASE_INTEGRATIONS.map((item) => {
+    if (item.id === "market-data" && overrides.market) return { ...item, ...overrides.market };
+    if (item.id === "news" && overrides.news) return { ...item, ...overrides.news };
+    return item;
+  });
 }
 
 export function getIntegration(id: IntegrationId): IntegrationSnapshot {

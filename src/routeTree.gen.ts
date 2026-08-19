@@ -22,6 +22,7 @@ import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiMarketQuotesRouteImport } from './routes/api/market/quotes'
+import { Route as ApiNewsCatalystsRouteImport } from './routes/api/news/catalysts'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -87,6 +88,11 @@ const ApiMarketQuotesRoute = ApiMarketQuotesRouteImport.update({
   path: '/api/market/quotes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiNewsCatalystsRoute = ApiNewsCatalystsRouteImport.update({
+  id: '/api/news/catalysts',
+  path: '/api/news/catalysts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/market/quotes': typeof ApiMarketQuotesRoute
+  '/api/news/catalysts': typeof ApiNewsCatalystsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/market/quotes': typeof ApiMarketQuotesRoute
+  '/api/news/catalysts': typeof ApiNewsCatalystsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/market/quotes': typeof ApiMarketQuotesRoute
+  '/api/news/catalysts': typeof ApiNewsCatalystsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/auth/$'
     | '/api/market/quotes'
+    | '/api/news/catalysts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/auth/$'
     | '/api/market/quotes'
+    | '/api/news/catalysts'
   id:
     | '__root__'
     | '/'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/auth/$'
     | '/api/market/quotes'
+    | '/api/news/catalysts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -185,6 +197,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiMarketQuotesRoute: typeof ApiMarketQuotesRoute
+  ApiNewsCatalystsRoute: typeof ApiNewsCatalystsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMarketQuotesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/news/catalysts': {
+      id: '/api/news/catalysts'
+      path: '/api/news/catalysts'
+      fullPath: '/api/news/catalysts'
+      preLoaderRoute: typeof ApiNewsCatalystsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -312,6 +332,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiMarketQuotesRoute: ApiMarketQuotesRoute,
+  ApiNewsCatalystsRoute: ApiNewsCatalystsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

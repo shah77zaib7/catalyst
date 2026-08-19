@@ -17,17 +17,17 @@ const routes = [
 ];
 
 const required = {
-  "/dashboard": ["CATALYST", "Market intelligence, without the noise.", "Market data unavailable", "No live catalysts yet", "No live events yet", "UNAVAILABLE", "Market state"],
-  "/catalysts": ["No live catalysts yet", "Connect a news source to begin."],
+  "/dashboard": ["CATALYST", "Market intelligence, without the noise.", "Important catalysts", "No live events yet", "UNAVAILABLE", "Market state"],
+  "/catalysts": ["Catalysts", "Important catalysts"],
   "/events": ["No live events yet"],
-  "/gold": ["Gold", "Market data unavailable", "UNAVAILABLE"],
-  "/crypto": ["Bitcoin", "Ethereum", "Solana", "Market data unavailable"],
+  "/gold": ["Gold", "UNAVAILABLE"],
+  "/crypto": ["Bitcoin", "Ethereum", "Solana"],
   "/alerts": ["No alerts configured"],
   "/settings": ["Appearance", "Source status", "System", "Dark", "Light"],
   "/login": ["Sign in", "Continue without signing in"],
 };
 
-const forbidden = [/\$(?:\d{1,3},)+\d{2,}/, /\bNFP\b/, /\bFOMC\b/, /\$67,\d{3}/, /\$108,\d{3}/];
+const forbidden = [/\$(?:\d{1,3},)+\d{2,}/, /\$67,\d{3}/, /\$108,\d{3}/];
 
 const browser = await chromium.launch({ headless: true });
 const errors = [];
