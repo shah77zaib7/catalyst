@@ -225,6 +225,67 @@ test("API keys never appear in returned data", async () => {
   assert.equal(feed.events[0]?.assets.includes("sol"), true);
 });
 
+test("CoinGecko official news array normalizes to LIVE", async () => {
+  const provider = createCoinGeckoProvider({
+    apiKey: SECRET,
+    fetchImpl: async () =>
+      Response.json([
+        {
+          title: "Bitcoin ETF inflows hit a record",
+          url: "https://www.coindesk.com/btc-etf",
+          author: "Desk",
+          source_name: "CoinDesk",
+          posted_at: "2026-08-19T09:30:00Z",
+          type: "news",
+          image: "https://example.com/a.png",
+        },
+      ]),
+  });
+  const result = await provider.fetchItems();
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.equal(result.items[0]?.title, "Bitcoin ETF inflows hit a record");
+    assert.equal(result.items[0]?.sourceName, "CoinDesk");
+    assert.equal(result.items[0]?.publishedAt, "2026-08-19T09:30:00.000Z");
+    assert.doesNotMatch(JSON.stringify(result.items), new RegExp(SECRET));
+  }
+});
+
+test("CoinGecko Demo /news plan lock falls back to trending coverage", async () => {
+  const seen: string[] = [];
+  const provider = createCoinGeckoProvider({
+    apiKey: SECRET,
+    fetchImpl: async (input, init) => {
+      const url = String(input);
+      seen.push(url);
+      const headers = new Headers(init?.headers);
+      assert.ok(headers.get("x-cg-demo-api-key") === SECRET || headers.get("x-cg-pro-api-key") === SECRET);
+      assert.doesNotMatch(url, new RegExp(SECRET));
+      if (url.includes("/news")) {
+        return Response.json(
+          { status: { error_code: 10011, error_message: "This request is exclusive to paid subscribers" } },
+          { status: 400 },
+        );
+      }
+      return Response.json({
+        coins: [
+          {
+            item: { id: "bitcoin", name: "Bitcoin", symbol: "btc", market_cap_rank: 1 },
+          },
+        ],
+      });
+    },
+  });
+  const result = await provider.fetchItems();
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.equal(result.items[0]?.title, "Bitcoin");
+    assert.equal(result.items[0]?.url, "https://www.coingecko.com/en/coins/bitcoin");
+    assert.match(result.items[0]?.summary ?? "", /BTC/);
+  }
+  assert.ok(seen.some((url) => url.includes("/search/trending")));
+});
+
 test("FRED keep-list is deterministic and Alpha Vantage maps timestamps", async () => {
   assert.equal(isRelevantFredRelease("Consumer Price Index"), true);
   assert.equal(isRelevantFredRelease("Weekly Seasonal Factors"), false);
