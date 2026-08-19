@@ -8,7 +8,7 @@
  * Do not populate the UI with invented instances of these objects.
  */
 
-export const ASSETS = ["gold", "bitcoin", "ethereum"] as const;
+export const ASSETS = ["gold", "bitcoin", "ethereum", "solana"] as const;
 export type Asset = (typeof ASSETS)[number];
 
 export const IMPACT_LEVELS = ["low", "medium", "high", "critical"] as const;
@@ -35,12 +35,17 @@ export type CatalystEvent = {
 
 export type MarketQuote = {
   asset: Asset;
+  symbol: string;
   /** Null when the source is unavailable or the quote is not trusted. */
   price: number | null;
   currency: string;
-  changeAbsolute: number | null;
-  changePercent: number | null;
-  asOf: string | null;
+  change24h: number | null;
+  changePercent24h: number | null;
+  open: number | null;
+  high: number | null;
+  low: number | null;
+  previousClose: number | null;
+  timestamp: string | null;
   source: string;
   sourceStatus: SourceStatus;
 };
@@ -60,10 +65,19 @@ export const ASSET_LABELS: Record<Asset, string> = {
   gold: "Gold",
   bitcoin: "Bitcoin",
   ethereum: "Ethereum",
+  solana: "Solana",
 };
 
 export const ASSET_TICKERS: Record<Asset, string> = {
   gold: "XAU",
   bitcoin: "BTC",
   ethereum: "ETH",
+  solana: "SOL",
+};
+
+export const ASSET_SYMBOLS: Record<Asset, string> = {
+  gold: "XAU/USD",
+  bitcoin: "BTC/USD",
+  ethereum: "ETH/USD",
+  solana: "SOL/USD",
 };

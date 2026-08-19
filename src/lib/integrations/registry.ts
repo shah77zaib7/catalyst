@@ -2,7 +2,7 @@ import type { SourceStatus } from "@/types/catalyst";
 
 /**
  * Every external integration must expose a source status.
- * Phase 1: nothing is connected. Status is always unavailable.
+ * Market data is wired to Twelve Data (server-side). Other phases remain unavailable.
  */
 export type IntegrationId =
   | "market-data"
@@ -19,12 +19,12 @@ export type IntegrationSnapshot = {
   lastUpdated: string | null;
 };
 
-export const INTEGRATIONS: readonly IntegrationSnapshot[] = [
+const BASE_INTEGRATIONS: readonly IntegrationSnapshot[] = [
   {
     id: "market-data",
     label: "Market data",
     sourceStatus: "unavailable",
-    detail: "No market-data provider is connected.",
+    detail: "No market-data API key is configured. Market data is UNAVAILABLE.",
     lastUpdated: null,
   },
   {
@@ -57,8 +57,18 @@ export const INTEGRATIONS: readonly IntegrationSnapshot[] = [
   },
 ] as const;
 
+export const INTEGRATIONS: readonly IntegrationSnapshot[] = BASE_INTEGRATIONS;
+
+export function getIntegrations(
+  market?: Partial<Pick<IntegrationSnapshot, "sourceStatus" | "detail" | "lastUpdated">>,
+): IntegrationSnapshot[] {
+  return BASE_INTEGRATIONS.map((item) =>
+    item.id === "market-data" && market ? { ...item, ...market } : item,
+  );
+}
+
 export function getIntegration(id: IntegrationId): IntegrationSnapshot {
-  const found = INTEGRATIONS.find((item) => item.id === id);
+  const found = BASE_INTEGRATIONS.find((item) => item.id === id);
   if (!found) {
     throw new Error(`Unknown integration: ${id}`);
   }

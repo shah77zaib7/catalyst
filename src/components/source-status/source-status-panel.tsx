@@ -1,4 +1,4 @@
-import { INTEGRATIONS, type IntegrationSnapshot } from "@/lib/integrations/registry";
+import { getIntegrations, type IntegrationSnapshot } from "@/lib/integrations/registry";
 import { SOURCE_STATUS_DESCRIPTIONS } from "@/lib/source-status";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SourceStatusBadge } from "@/components/source-status/source-status-badge";
@@ -18,10 +18,13 @@ function IntegrationRow({ item }: { item: IntegrationSnapshot }) {
 export function SourceStatusPanel({
   title = "Source status",
   description = "Every external integration exposes an explicit status. MOCK and UNAVAILABLE are never presented as live.",
+  items,
 }: {
   title?: string;
   description?: string;
+  items?: IntegrationSnapshot[];
 }) {
+  const rows = items ?? getIntegrations();
   return (
     <Card>
       <CardHeader>
@@ -30,7 +33,7 @@ export function SourceStatusPanel({
       </CardHeader>
       <CardContent>
         <div>
-          {INTEGRATIONS.map((item) => (
+          {rows.map((item) => (
             <IntegrationRow key={item.id} item={item} />
           ))}
         </div>

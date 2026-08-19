@@ -3,14 +3,21 @@ import { CatalystFeed } from "@/components/catalysts/catalyst-feed";
 import { UpcomingEvents } from "@/components/events/upcoming-events";
 import { MarketWatch } from "@/components/market/market-watch";
 import { SourceStatusBadge } from "@/components/source-status/source-status-badge";
-import { DASHBOARD_WATCHLIST, getWatchlistQuotes } from "@/lib/market/quotes";
+import { DASHBOARD_WATCHLIST } from "@/lib/market/instruments";
+import { loadMarketQuotes } from "@/lib/market/load-quotes";
 
 export const Route = createFileRoute("/_app/dashboard")({
+  loader: () => loadMarketQuotes({ data: { assets: [...DASHBOARD_WATCHLIST] } }),
   component: DashboardPage,
 });
 
 function DashboardPage() {
-  const quotes = getWatchlistQuotes(DASHBOARD_WATCHLIST);
+  const quotes = Route.useLoaderData();
+  const marketStatus = quotes.some((quote) => quote.sourceStatus === "live")
+    ? "live"
+    : quotes.some((quote) => quote.sourceStatus === "cached")
+      ? "cached"
+      : "unavailable";
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-10">
@@ -27,8 +34,8 @@ function DashboardPage() {
       </header>
 
       <div className="enter-fade enter-fade-delay-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <span>External sources</span>
-        <SourceStatusBadge status="unavailable" />
+        <span>Market data</span>
+        <SourceStatusBadge status={marketStatus} />
       </div>
 
       <div className="enter-fade enter-fade-delay-2">

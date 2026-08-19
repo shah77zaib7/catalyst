@@ -4,11 +4,30 @@ import { SourceStatusPanel } from "@/components/source-status/source-status-pane
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { getIntegrations } from "@/lib/integrations/registry";
+import { ASSETS } from "@/types/catalyst";
+import { loadMarketIntegration, loadMarketQuotes } from "@/lib/market/load-quotes";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { signOut } from "@/lib/auth/client";
 import { useTheme } from "@/lib/theme";
 
 export const Route = createFileRoute("/_app/settings")({
+  loader: async () => {
+    const quotes = await loadMarketQuotes({ data: { assets: [...ASSETS] } });
+    const market = await loadMarketIntegration();
+    const latest = quotes
+      .map((quote) => quote.timestamp)
+      .filter((value): value is string => Boolean(value))
+      .sort()
+      .at(-1);
+    return {
+      integrations: getIntegrations({
+        sourceStatus: market.sourceStatus,
+        detail: market.detail,
+        lastUpdated: latest ?? null,
+      }),
+    };
+  },
   component: SettingsPage,
 });
 
@@ -21,6 +40,7 @@ const THEME_OPTIONS = [
 function SettingsPage() {
   const { preference, setPreference } = useTheme();
   const { user, isPending } = useCurrentUserState();
+  const { integrations } = Route.useLoaderData();
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8">
@@ -74,12 +94,12 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
-      <SourceStatusPanel />
+      <SourceStatusPanel items={integrations} />
 
       <Card>
         <CardHeader>
           <CardTitle>About</CardTitle>
-          <CardDescription>Product contract for Phase 1.</CardDescription>
+          <CardDescription>Product contract.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>Catalyst informs the trader. It does not trade for the trader.</p>
@@ -87,8 +107,9 @@ function SettingsPage() {
             Raw data → deterministic processing → AI interpretation → user
           </p>
           <p>
-            No market-data, news, calendar, notification, or AI provider is connected. Unavailable
-            integrations are labeled UNAVAILABLE. Mock data, if ever used, will be labeled MOCK.
+            Market quotes come from Twelve Data through a server-side adapter. News, calendar,
+            notifications, and AI are not connected. Unavailable integrations are labeled
+            UNAVAILABLE. Cached quotes are never labeled LIVE.
           </p>
         </CardContent>
       </Card>

@@ -21,7 +21,7 @@ const required = {
   "/catalysts": ["No live catalysts yet", "Connect a news source to begin."],
   "/events": ["No live events yet"],
   "/gold": ["Gold", "Market data unavailable", "UNAVAILABLE"],
-  "/crypto": ["Bitcoin", "Ethereum", "Market data unavailable"],
+  "/crypto": ["Bitcoin", "Ethereum", "Solana", "Market data unavailable"],
   "/alerts": ["No alerts configured"],
   "/settings": ["Appearance", "Source status", "System", "Dark", "Light"],
   "/login": ["Sign in", "Continue without signing in"],

@@ -21,6 +21,7 @@ import { Route as AppGoldRouteImport } from './routes/_app/gold'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiMarketQuotesRouteImport } from './routes/api/market/quotes'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -81,6 +82,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMarketQuotesRoute = ApiMarketQuotesRouteImport.update({
+  id: '/api/market/quotes',
+  path: '/api/market/quotes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/market/quotes': typeof ApiMarketQuotesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/market/quotes': typeof ApiMarketQuotesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/api/health': typeof ApiHealthRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/market/quotes': typeof ApiMarketQuotesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/health'
     | '/api/auth/$'
+    | '/api/market/quotes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/health'
     | '/api/auth/$'
+    | '/api/market/quotes'
   id:
     | '__root__'
     | '/'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/api/health'
     | '/api/auth/$'
+    | '/api/market/quotes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -172,6 +184,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiMarketQuotesRoute: typeof ApiMarketQuotesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/market/quotes': {
+      id: '/api/market/quotes'
+      path: '/api/market/quotes'
+      fullPath: '/api/market/quotes'
+      preLoaderRoute: typeof ApiMarketQuotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -291,6 +311,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiMarketQuotesRoute: ApiMarketQuotesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
