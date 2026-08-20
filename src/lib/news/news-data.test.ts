@@ -9,6 +9,13 @@ import { createAlphaVantageProvider } from "./providers/alpha-vantage";
 import { createCoinGeckoProvider } from "./providers/coingecko";
 import { createFredProvider, isRelevantFredRelease } from "./providers/fred";
 import { createGdeltProvider } from "./providers/gdelt";
+import {
+  createSoSoValueProvider,
+  etfRowsToItems,
+  macroRowsToItems,
+  newsRowsToItems,
+  SOSOVALUE_TTL_MS,
+} from "./providers/sosovalue";
 import type { CatalystEvent } from "../../types/catalyst";
 import type { NewsProvider, RawNewsItem } from "./provider";
 
@@ -338,3 +345,222 @@ test("canonicalizeUrl strips tracking params", () => {
     "https://www.example.com/a?id=1",
   );
 });
+
+const SOSO_SECRET = "soso_test_secret_do_not_leak_777";
+
+function sosoFetchByPath(handlers: Record<string, () => Response>): typeof fetch {
+  return async (input, init) => {
+    const url = String(input);
+    assert.doesNotMatch(url, new RegExp(SOSO_SECRET));
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("x-soso-api-key"), SOSO_SECRET);
+    for (const [fragment, handler] of Object.entries(handlers)) {
+      if (url.includes(fragment)) return handler();
+    }
+    return Response.json({ code: 0, data: { list: [] } });
+  };
+}
+
+test("SoSoValue missing key fails closed", async () => {
+  const result = await createSoSoValueProvider({ apiKey: "" }).fetchItems();
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.kind, "missing_key");
+});
+
+test("SoSoValue news and hot items normalize without invented fields", () => {
+  const items = newsRowsToItems([
+    {
+      id: "n1",
+      title: "Bitcoin ETF inflows hit a record",
+      author: "SoSo Desk",
+      original_link: "https://news.example/btc-etf?utm_source=soso",
+      release_time: "2026-08-19T09:00:00Z",
+      content: "US spot bitcoin ETFs took in new capital.",
+      matched_currencies: [{ symbol: "BTC" }],
+    },
+    { id: "n2", title: "Missing url dropped", content: "no link" },
+  ]);
+  assert.equal(items.length, 1);
+  assert.equal(items[0]?.title, "Bitcoin ETF inflows hit a record");
+  assert.match(items[0]?.summary ?? "", /US spot bitcoin ETFs/);
+  assert.match(items[0]?.summary ?? "", /BTC/);
+  assert.equal(items[0]?.publishedAt, "2026-08-19T09:00:00.000Z");
+  const event = normalizeRawItem(items[0]!, "live", "2026-08-19T10:00:00.000Z");
+  assert.equal(event?.impact, null);
+  assert.ok(event?.assets.includes("btc"));
+});
+
+test("SoSoValue ETF and macro rows keep provider timestamps and URLs", () => {
+  const etf = etfRowsToItems("BTC", [
+    { date: "2026-08-18", total_net_inflow: 100 },
+    { date: "2026-08-19", total_net_inflow: -42 },
+  ]);
+  assert.equal(etf.length, 1);
+  assert.equal(etf[0]?.title, "US BTC ETF 2026-08-19");
+  assert.equal(etf[0]?.summary, "total_net_inflow -42");
+  assert.equal(etf[0]?.url, "https://sosovalue.com/assets/etf/us-btc-spot");
+  assert.equal(etf[0]?.publishedAt, "2026-08-19T00:00:00.000Z");
+
+  const macro = macroRowsToItems([{ date: "2026-08-20", events: ["FOMC holds rates steady"] }]);
+  assert.equal(macro[0]?.title, "FOMC holds rates steady");
+  assert.equal(macro[0]?.publishedAt, "2026-08-20T00:00:00.000Z");
+  const mapped = classifyText(macro[0]!.title);
+  assert.ok(mapped.assets.includes("btc"));
+  assert.ok(mapped.assets.includes("gold"));
+  assert.ok(mapped.assets.includes("usd"));
+});
+
+test("SoSoValue invalid key and malformed payloads fail closed", async () => {
+  const invalid = await createSoSoValueProvider({
+    apiKey: SOSO_SECRET,
+    fetchImpl: async () => Response.json({ code: 40101, message: "unauthorized" }, { status: 401 }),
+  }).fetchItems();
+  assert.equal(invalid.ok, false);
+  if (!invalid.ok) assert.equal(invalid.kind, "invalid_key");
+  assert.doesNotMatch(JSON.stringify(invalid), new RegExp(SOSO_SECRET));
+
+  const malformed = await createSoSoValueProvider({
+    apiKey: SOSO_SECRET,
+    fetchImpl: async () => new Response("<html>nope</html>", { status: 200 }),
+  }).fetchItems();
+  assert.equal(malformed.ok, false);
+  if (!malformed.ok) assert.equal(malformed.kind, "malformed");
+});
+
+test("SoSoValue rate-limit is classified and never labeled LIVE", async () => {
+  const result = await createSoSoValueProvider({
+    apiKey: SOSO_SECRET,
+    fetchImpl: async () => Response.json({ code: 42901, message: "too many" }, { status: 429 }),
+  }).fetchItems();
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.kind, "rate_limit");
+
+  const service = createNewsService({
+    providers: [createSoSoValueProvider({ apiKey: SOSO_SECRET, fetchImpl: async () => Response.json({ code: 42901 }, { status: 429 }) })],
+    cache: createMemoryNewsCache(),
+  });
+  const feed = await service.getFeed();
+  assert.equal(feed.status, "unavailable");
+  assert.equal(feed.events.length, 0);
+});
+
+test("SoSoValue caches LIVE then serves CACHED on provider failure", async () => {
+  let calls = 0;
+  const fetchImpl: typeof fetch = async () => {
+    calls += 1;
+    if (calls <= 5) {
+      return Response.json({
+        code: 0,
+        data: {
+          list: [
+            {
+              id: "hot-1",
+              title: "Solana network restored",
+              source_link: "https://news.example/sol-restore",
+              create_time: "2026-08-19T08:00:00Z",
+            },
+          ],
+        },
+      });
+    }
+    return Response.json({ code: 42901 }, { status: 429 });
+  };
+  const provider = createSoSoValueProvider({ apiKey: SOSO_SECRET, fetchImpl });
+  const service = createNewsService({
+    providers: [provider],
+    cache: createMemoryNewsCache(),
+    now: () => (calls < 5 ? 0 : SOSOVALUE_TTL_MS + 1),
+  });
+  const live = await service.getFeed();
+  assert.equal(live.status, "live");
+  const cached = await service.getFeed();
+  assert.equal(cached.status, "cached");
+  assert.equal(cached.events[0]?.sourceStatus, "cached");
+  assert.equal(cached.events[0]?.title, "Solana network restored");
+});
+
+test("SoSoValue news and hot duplicates cluster while keeping both URLs", async () => {
+  const provider = createSoSoValueProvider({
+    apiKey: SOSO_SECRET,
+    fetchImpl: sosoFetchByPath({
+      "/news/hot": () =>
+        Response.json({
+          code: 0,
+          data: {
+            list: [
+              {
+                title: "Ethereum developers delay upgrade",
+                source_link: "https://news.example/eth-delay",
+                create_time: "2026-08-19T07:00:00Z",
+              },
+            ],
+          },
+        }),
+      "/news?": () =>
+        Response.json({
+          code: 0,
+          data: {
+            list: [
+              {
+                title: "Ethereum developers delay upgrade",
+                original_link: "https://mirror.example/eth-delay",
+                release_time: "2026-08-19T07:00:00Z",
+              },
+            ],
+          },
+        }),
+    }),
+  });
+  const service = createNewsService({ providers: [provider], cache: createMemoryNewsCache() });
+  const feed = await service.getFeed();
+  assert.equal(feed.events.length, 1);
+  assert.equal(feed.events[0]?.sourceUrls.length, 2);
+  assert.doesNotMatch(JSON.stringify(feed), new RegExp(SOSO_SECRET));
+});
+
+test("SoSoValue endpoint failure does not drop a successful sibling endpoint", async () => {
+  const provider = createSoSoValueProvider({
+    apiKey: SOSO_SECRET,
+    fetchImpl: sosoFetchByPath({
+      "/news/hot": () => Response.json({ code: 0, data: { list: [] } }),
+      "/news?": () =>
+        Response.json({
+          code: 0,
+          data: {
+            list: [
+              {
+                title: "Gold-backed token discussion continues",
+                original_link: "https://news.example/gold-token",
+                release_time: "2026-08-19T06:00:00Z",
+              },
+            ],
+          },
+        }),
+      "/etfs/": () => Response.json({ code: 500, message: "down" }, { status: 500 }),
+      "/macro/events": () => Response.json({ code: 500, message: "down" }, { status: 500 }),
+    }),
+  });
+  const result = await provider.fetchItems();
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.equal(result.items.some((item) => item.title.includes("Gold-backed")), true);
+  }
+});
+
+test("one failed provider does not block SoSoValue", async () => {
+  const service = createNewsService({
+    providers: [
+      staticProvider("gdelt", { ok: false, kind: "network", message: "down" }),
+      staticProvider("sosovalue", {
+        ok: true,
+        items: [raw({ providerId: "sosovalue", title: "Bitcoin ETF inflows hit a record", url: "https://news.example/btc" })],
+      }),
+    ],
+    cache: createMemoryNewsCache(),
+  });
+  const feed = await service.getFeed();
+  assert.equal(feed.status, "live");
+  assert.equal(feed.events[0]?.title, "Bitcoin ETF inflows hit a record");
+  assert.equal(feed.providers.find((item) => item.label === "gdelt")?.sourceStatus, "unavailable");
+});
+

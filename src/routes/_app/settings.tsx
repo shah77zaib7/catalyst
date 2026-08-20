@@ -121,9 +121,9 @@ function SettingsPage() {
             Raw data → deterministic processing → AI interpretation → user
           </p>
           <p>
-            Market quotes come from Twelve Data. News is ingested from GDELT, CoinGecko, FRED, and
-            optional Alpha Vantage. Calendar, notifications, and AI are not connected. Cached items
-            are never labeled LIVE.
+            Market quotes come from Twelve Data. News is ingested from GDELT, CoinGecko, SoSoValue,
+            FRED, and optional Alpha Vantage. Calendar, notifications, and AI are not connected.
+            Cached items are never labeled LIVE.
           </p>
         </CardContent>
       </Card>

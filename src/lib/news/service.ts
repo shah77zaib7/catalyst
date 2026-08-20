@@ -8,6 +8,7 @@ import { createAlphaVantageProvider } from "./providers/alpha-vantage";
 import { createCoinGeckoProvider } from "./providers/coingecko";
 import { createFredProvider } from "./providers/fred";
 import { createGdeltProvider } from "./providers/gdelt";
+import { createSoSoValueProvider } from "./providers/sosovalue";
 
 export type NewsFeed = {
   events: CatalystEvent[];
@@ -34,6 +35,7 @@ export function createNewsService(options: NewsServiceOptions = {}) {
     [
       createGdeltProvider(),
       createCoinGeckoProvider({ apiKey: process.env.COINGECKO_API_KEY }),
+      createSoSoValueProvider({ apiKey: process.env.SOSOVALUE_API_KEY }),
       createFredProvider({ apiKey: process.env.FRED_API_KEY }),
       createAlphaVantageProvider({ apiKey: process.env.ALPHA_VANTAGE_API_KEY }),
     ];
