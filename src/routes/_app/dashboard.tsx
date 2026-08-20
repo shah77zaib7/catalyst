@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CatalystFeed } from "@/components/catalysts/catalyst-feed";
 import { UpcomingEvents } from "@/components/events/upcoming-events";
 import { MarketWatch } from "@/components/market/market-watch";
+import { BinanceMarquee } from "@/components/market/binance-marquee";
 import { SourceStatusBadge } from "@/components/source-status/source-status-badge";
 import { DASHBOARD_WATCHLIST } from "@/lib/market/instruments";
 import { loadMarketQuotes } from "@/lib/market/load-quotes";
@@ -45,8 +46,9 @@ function DashboardPage() {
         <SourceStatusBadge status={marketStatus} />
       </div>
 
-      <div className="enter-fade enter-fade-delay-2">
+      <div className="enter-fade enter-fade-delay-2 space-y-4">
         <MarketWatch quotes={quotes} />
+        <BinanceMarquee />
       </div>
 
       <div className="enter-fade enter-fade-delay-3 grid gap-5 overflow-visible lg:grid-cols-2">
