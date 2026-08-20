@@ -8,7 +8,7 @@ const XAUUSD_WIDGET_CONFIG = {
   allow_symbol_change: true,
   calendar: false,
   details: false,
-  hide_side_toolbar: true,
+  hide_side_toolbar: false,
   hide_top_toolbar: false,
   hide_legend: false,
   hide_volume: false,
@@ -23,10 +23,13 @@ const XAUUSD_WIDGET_CONFIG = {
   backgroundColor: "#ffffff",
   gridColor: "rgba(46, 46, 46, 0.2)",
   watchlist: [],
-  withdateranges: false,
+  withdateranges: true,
   compareSymbols: [],
   studies: [],
   autosize: true,
+  show_popup_button: true,
+  popup_height: "650",
+  popup_width: "1000",
   support_host: "https://www.tradingview.com",
 } as const;
 
