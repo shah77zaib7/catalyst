@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CatalystFeed } from "@/components/catalysts/catalyst-feed";
 import { UpcomingEvents } from "@/components/events/upcoming-events";
 import { MarketWatch } from "@/components/market/market-watch";
+import { TradingViewCryptoChart } from "@/components/market/tradingview-chart";
 import { PageHeader } from "@/components/page-header";
 import { CRYPTO_WATCHLIST } from "@/lib/market/instruments";
 import { loadMarketQuotes } from "@/lib/market/load-quotes";
@@ -33,6 +34,7 @@ function CryptoPage() {
         <CatalystFeed events={news.events} status={news.status} />
         <UpcomingEvents />
       </div>
+      <TradingViewCryptoChart />
     </div>
   );
 }
