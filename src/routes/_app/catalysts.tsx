@@ -17,7 +17,7 @@ function CatalystsPage() {
       <PageHeader
         eyebrow="Feed"
         title="Catalysts"
-        description="Normalized items from connected news providers. Cached items are never labeled LIVE. Nothing is invented."
+        description="Normalized items from connected news providers, with deterministic event intelligence. Relevance is not a forecast. Cached items are never labeled LIVE."
       />
       <CatalystFeed events={news.events} status={news.status} />
       <SourceStatusPanel title="News sources" items={news.providers} />
