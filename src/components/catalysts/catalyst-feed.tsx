@@ -1,5 +1,6 @@
 import { Newspaper } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { EventContextBlock } from "@/components/catalysts/event-context";
 import { ObservedReaction } from "@/components/catalysts/observed-reaction";
 import { MarketCardBeam } from "@/components/market/market-card-beam";
 import { SourceStatusBadge } from "@/components/source-status/source-status-badge";
@@ -121,6 +122,7 @@ export function CatalystFeed({
                       <IntelligenceMeta event={event} />
                     </a>
                     <ObservedReaction reaction={event.marketReaction} />
+                    <EventContextBlock context={event.context} />
                   </li>
                 ))}
               </ul>

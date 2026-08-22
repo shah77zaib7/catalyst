@@ -198,11 +198,64 @@ export type MarketReaction = {
   reason: string | null;
 };
 
+export const CONTEXT_STATUSES = ["AVAILABLE", "PARTIAL", "UNAVAILABLE"] as const;
+export type ContextStatus = (typeof CONTEXT_STATUSES)[number];
+
+export const CONTEXT_RELATIONSHIPS = [
+  "SIMULTANEOUS",
+  "NEARBY",
+  "SAME_ASSET",
+  "SAME_CATEGORY",
+  "SAME_MACRO_THEME",
+  "SAME_CURRENCY",
+  "CROSS_ASSET",
+  "UNRELATED",
+] as const;
+export type ContextRelationship = (typeof CONTEXT_RELATIONSHIPS)[number];
+
+export type RelatedEventContext = {
+  eventId: string;
+  title: string;
+  publishedAt: string;
+  distanceSeconds: number;
+  relationship: ContextRelationship[];
+  sharedAssets: IntelligenceSymbol[];
+  sharedThemes: string[];
+  importance: ImportanceTier;
+  relevanceReasons: string[];
+};
+
+export type EventDensity = {
+  windowMinutes: number;
+  total: number;
+  critical: number;
+  high: number;
+  medium: number;
+};
+
+export type AssetMarketContext = {
+  preEventReturnPercent: number | null;
+  postEvent15mReturnPercent: number | null;
+  postEventDirection: ReactionDirection;
+};
+
+export type EventContext = {
+  status: ContextStatus;
+  relatedEvents: RelatedEventContext[];
+  eventDensity: EventDensity;
+  marketContext: {
+    status: ContextStatus;
+    assets: Partial<Record<IntelligenceSymbol, AssetMarketContext>>;
+  };
+  reason: string | null;
+};
+
 /**
  * A market-moving item from a connected news or event source.
  * Impact is null unless a provider supplies it — never estimated.
  * Intelligence is attached after clustering; it is never a forecast.
  * marketReaction is observed price behavior around the event, not causality.
+ * context is nearby events and overlapping structure, not a causal graph.
  */
 export type CatalystEvent = {
   id: string;
@@ -220,6 +273,7 @@ export type CatalystEvent = {
   providers: string[];
   intelligence?: EventIntelligence | null;
   marketReaction?: MarketReaction | null;
+  context?: EventContext | null;
 };
 
 export type MarketQuote = {

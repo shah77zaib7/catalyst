@@ -5,6 +5,7 @@ import { clusterEvents } from "./dedupe";
 import { normalizeRawItem } from "./normalize";
 import { enrichWithIntelligence } from "../intelligence/engine";
 import { attachObservedReactions } from "../reaction/service";
+import { attachEventContext } from "../context/engine";
 import type { NewsProvider, RawNewsItem } from "./provider";
 import { createAlphaVantageProvider } from "./providers/alpha-vantage";
 import { createCoinGeckoProvider } from "./providers/coingecko";
@@ -111,6 +112,7 @@ export function createNewsService(options: NewsServiceOptions = {}) {
 
       let events = clusterEvents(normalized).map((event) => enrichWithIntelligence(event, now()));
       events = await attachReactions(events);
+      events = attachEventContext(events);
       if (filter?.assets && filter.assets.length > 0) {
         const wanted = new Set(filter.assets);
         events = events.filter((event) => event.assets.some((asset) => wanted.has(asset)));
