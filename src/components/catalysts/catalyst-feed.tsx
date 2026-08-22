@@ -2,6 +2,7 @@ import { Newspaper } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { EventContextBlock } from "@/components/catalysts/event-context";
 import { ObservedReaction } from "@/components/catalysts/observed-reaction";
+import { OraclePanel } from "@/components/catalysts/oracle-panel";
 import { MarketCardBeam } from "@/components/market/market-card-beam";
 import { SourceStatusBadge } from "@/components/source-status/source-status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -123,6 +124,7 @@ export function CatalystFeed({
                     </a>
                     <ObservedReaction reaction={event.marketReaction} />
                     <EventContextBlock context={event.context} />
+                    <OraclePanel event={event} />
                   </li>
                 ))}
               </ul>

@@ -23,6 +23,7 @@ import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiMarketQuotesRouteImport } from './routes/api/market/quotes'
 import { Route as ApiNewsCatalystsRouteImport } from './routes/api/news/catalysts'
+import { Route as ApiOracleAnalyzeRouteImport } from './routes/api/oracle/analyze'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -93,6 +94,11 @@ const ApiNewsCatalystsRoute = ApiNewsCatalystsRouteImport.update({
   path: '/api/news/catalysts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOracleAnalyzeRoute = ApiOracleAnalyzeRouteImport.update({
+  id: '/api/oracle/analyze',
+  path: '/api/oracle/analyze',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/market/quotes': typeof ApiMarketQuotesRoute
   '/api/news/catalysts': typeof ApiNewsCatalystsRoute
+  '/api/oracle/analyze': typeof ApiOracleAnalyzeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/market/quotes': typeof ApiMarketQuotesRoute
   '/api/news/catalysts': typeof ApiNewsCatalystsRoute
+  '/api/oracle/analyze': typeof ApiOracleAnalyzeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/market/quotes': typeof ApiMarketQuotesRoute
   '/api/news/catalysts': typeof ApiNewsCatalystsRoute
+  '/api/oracle/analyze': typeof ApiOracleAnalyzeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/market/quotes'
     | '/api/news/catalysts'
+    | '/api/oracle/analyze'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/market/quotes'
     | '/api/news/catalysts'
+    | '/api/oracle/analyze'
   id:
     | '__root__'
     | '/'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/market/quotes'
     | '/api/news/catalysts'
+    | '/api/oracle/analyze'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -198,6 +210,7 @@ export interface RootRouteChildren {
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiMarketQuotesRoute: typeof ApiMarketQuotesRoute
   ApiNewsCatalystsRoute: typeof ApiNewsCatalystsRoute
+  ApiOracleAnalyzeRoute: typeof ApiOracleAnalyzeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -300,6 +313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNewsCatalystsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/oracle/analyze': {
+      id: '/api/oracle/analyze'
+      path: '/api/oracle/analyze'
+      fullPath: '/api/oracle/analyze'
+      preLoaderRoute: typeof ApiOracleAnalyzeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -333,6 +353,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiMarketQuotesRoute: ApiMarketQuotesRoute,
   ApiNewsCatalystsRoute: ApiNewsCatalystsRoute,
+  ApiOracleAnalyzeRoute: ApiOracleAnalyzeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
