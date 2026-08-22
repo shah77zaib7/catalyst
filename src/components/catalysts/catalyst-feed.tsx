@@ -1,5 +1,6 @@
 import { Newspaper } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { ObservedReaction } from "@/components/catalysts/observed-reaction";
 import { MarketCardBeam } from "@/components/market/market-card-beam";
 import { SourceStatusBadge } from "@/components/source-status/source-status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +120,7 @@ export function CatalystFeed({
                       </p>
                       <IntelligenceMeta event={event} />
                     </a>
+                    <ObservedReaction reaction={event.marketReaction} />
                   </li>
                 ))}
               </ul>

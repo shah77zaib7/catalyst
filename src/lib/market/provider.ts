@@ -22,9 +22,17 @@ export type ProviderFailure = {
 
 export type ProviderResult = ProviderSuccess | ProviderFailure;
 
+export type TimeSeriesQuery = {
+  symbol: string;
+  startUtc: string;
+  endUtc: string;
+  interval: "1min";
+};
+
 export type MarketDataProvider = {
   id: string;
   getQuote(symbol: string): Promise<ProviderResult>;
+  getTimeSeries?(query: TimeSeriesQuery): Promise<ProviderResult>;
 };
 
 export const PROVIDER_FAILURE_SOURCES: Record<ProviderFailureKind, string> = {

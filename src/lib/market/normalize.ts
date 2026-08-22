@@ -115,3 +115,55 @@ export function asCachedQuote(quote: MarketQuote): MarketQuote {
     sourceStatus: "cached",
   };
 }
+
+export type MarketCandle = {
+  observedAt: string;
+  close: number;
+  open: number | null;
+  high: number | null;
+  low: number | null;
+};
+
+function candleTimeToIso(value: unknown): string | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const millis = value > 1_000_000_000_000 ? value : value * 1000;
+    const date = new Date(millis);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  }
+  if (typeof value !== "string" || value.trim() === "") return null;
+  const raw = value.trim();
+  const withT = raw.includes("T") ? raw : raw.replace(" ", "T");
+  const utc = /Z$|[+-]\d{2}:?\d{2}$/.test(withT) ? withT : `${withT}Z`;
+  const parsed = Date.parse(utc);
+  return Number.isNaN(parsed) ? null : new Date(parsed).toISOString();
+}
+
+/**
+ * Map a Twelve Data /time_series payload onto candles.
+ * Bars without a real close are skipped. Nothing is interpolated.
+ */
+export function normalizeTwelveDataTimeSeries(payload: unknown): MarketCandle[] | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  if (isProviderErrorPayload(payload)) return null;
+  const record = payload as Record<string, unknown>;
+  if (!Array.isArray(record.values)) return null;
+
+  const candles: MarketCandle[] = [];
+  for (const row of record.values) {
+    if (!row || typeof row !== "object") continue;
+    const bar = row as Record<string, unknown>;
+    const close = parseFiniteNumber(bar.close);
+    const observedAt = candleTimeToIso(bar.datetime ?? bar.timestamp);
+    if (close == null || !observedAt) continue;
+    candles.push({
+      observedAt,
+      close,
+      open: parseFiniteNumber(bar.open),
+      high: parseFiniteNumber(bar.high),
+      low: parseFiniteNumber(bar.low),
+    });
+  }
+
+  candles.sort((a, b) => a.observedAt.localeCompare(b.observedAt));
+  return candles;
+}

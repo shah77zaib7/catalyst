@@ -4,6 +4,7 @@ import { createMemoryNewsCache, isFresh, isUsableStale, type NewsCache } from ".
 import { clusterEvents } from "./dedupe";
 import { normalizeRawItem } from "./normalize";
 import { enrichWithIntelligence } from "../intelligence/engine";
+import { attachObservedReactions } from "../reaction/service";
 import type { NewsProvider, RawNewsItem } from "./provider";
 import { createAlphaVantageProvider } from "./providers/alpha-vantage";
 import { createCoinGeckoProvider } from "./providers/coingecko";
@@ -21,6 +22,7 @@ export type NewsServiceOptions = {
   providers?: NewsProvider[];
   cache?: NewsCache;
   now?: () => number;
+  attachReactions?: (events: CatalystEvent[]) => Promise<CatalystEvent[]>;
 };
 
 type ProviderPull = {
@@ -42,6 +44,11 @@ export function createNewsService(options: NewsServiceOptions = {}) {
     ];
   const cache = options.cache ?? createMemoryNewsCache();
   const now = options.now ?? Date.now;
+  const attachReactions =
+    options.attachReactions ??
+    (options.providers
+      ? async (events: CatalystEvent[]) => events
+      : attachObservedReactions);
 
   async function pullProvider(provider: NewsProvider): Promise<ProviderPull> {
     const cached = cache.get(provider.id);
@@ -103,6 +110,7 @@ export function createNewsService(options: NewsServiceOptions = {}) {
       }
 
       let events = clusterEvents(normalized).map((event) => enrichWithIntelligence(event, now()));
+      events = await attachReactions(events);
       if (filter?.assets && filter.assets.length > 0) {
         const wanted = new Set(filter.assets);
         events = events.filter((event) => event.assets.some((asset) => wanted.has(asset)));

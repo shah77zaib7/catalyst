@@ -114,10 +114,95 @@ export type EventIntelligence = {
   };
 };
 
+export const REACTION_DIRECTIONS = ["UP", "DOWN", "FLAT", "UNKNOWN"] as const;
+export type ReactionDirection = (typeof REACTION_DIRECTIONS)[number];
+
+export const REACTION_STRENGTHS = ["VERY_LOW", "LOW", "MODERATE", "HIGH", "EXTREME"] as const;
+export type ReactionStrength = (typeof REACTION_STRENGTHS)[number];
+
+export const REACTION_QUALITY_STATUSES = ["GOOD", "PARTIAL", "INSUFFICIENT", "UNAVAILABLE"] as const;
+export type ReactionQualityStatus = (typeof REACTION_QUALITY_STATUSES)[number];
+
+export const MARKET_REACTION_STATUSES = ["OBSERVED", "PARTIAL", "INSUFFICIENT", "UNAVAILABLE"] as const;
+export type MarketReactionStatus = (typeof MARKET_REACTION_STATUSES)[number];
+
+export const POST_WINDOW_KEYS = ["1m", "5m", "15m", "30m", "1h", "4h"] as const;
+export type PostWindowKey = (typeof POST_WINDOW_KEYS)[number];
+
+export type PriceObservation = {
+  requestedAt: string;
+  observedAt: string;
+  price: number;
+  deltaSeconds: number;
+};
+
+export type ReactionWindow = {
+  requestedAt: string;
+  observedAt: string | null;
+  price: number | null;
+  deltaSeconds: number | null;
+  change: number | null;
+  changePercent: number | null;
+  direction: ReactionDirection;
+  reason: "not_elapsed" | "no_observation" | null;
+};
+
+export type AssetMarketReaction = {
+  symbol: IntelligenceSymbol;
+  baseline: PriceObservation | null;
+  eventPrice: PriceObservation | null;
+  preEvent: {
+    "15mReturnPercent": number | null;
+    "5mReturnPercent": number | null;
+    direction: ReactionDirection;
+  } | null;
+  windows: Record<PostWindowKey, ReactionWindow>;
+  maximumMove: {
+    upPercent: number;
+    downPercent: number;
+    absolutePercent: number;
+  } | null;
+  observedRange: {
+    high: number;
+    low: number;
+    range: number;
+    rangePercent: number;
+    source: "provider_ohlc" | "observed_closes";
+  } | null;
+  primaryReaction: {
+    window: PostWindowKey;
+    direction: ReactionDirection;
+    changePercent: number | null;
+    strength: ReactionStrength | null;
+  };
+  reversal: {
+    detected: boolean;
+    initialDirection?: ReactionDirection;
+    laterDirection?: ReactionDirection;
+  };
+  dataQuality: {
+    status: ReactionQualityStatus;
+    missingWindows: string[];
+    maxObservationLatencySeconds: number | null;
+    reason: string | null;
+  };
+};
+
+/** Observed temporal reaction. Not causality, not a forecast, not a signal. */
+export type MarketReaction = {
+  status: MarketReactionStatus;
+  eventAt: string | null;
+  source: string;
+  sourceStatus: SourceStatus;
+  assets: Partial<Record<IntelligenceSymbol, AssetMarketReaction>>;
+  reason: string | null;
+};
+
 /**
  * A market-moving item from a connected news or event source.
  * Impact is null unless a provider supplies it — never estimated.
  * Intelligence is attached after clustering; it is never a forecast.
+ * marketReaction is observed price behavior around the event, not causality.
  */
 export type CatalystEvent = {
   id: string;
@@ -134,6 +219,7 @@ export type CatalystEvent = {
   sourceStatus: SourceStatus;
   providers: string[];
   intelligence?: EventIntelligence | null;
+  marketReaction?: MarketReaction | null;
 };
 
 export type MarketQuote = {
